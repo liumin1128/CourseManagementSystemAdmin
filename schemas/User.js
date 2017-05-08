@@ -1,17 +1,19 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-var ObjectId = Schema.Types.ObjectId;
-var CourseSchema = new Schema({
-    name: String,
-    desc: String,
-    teacher: {
-        type: ObjectId,
-        ref: "User"
+
+var UserSchema = new Schema({
+    username: String,
+    password: String,
+    nickName: String,
+    avatarUrl: String,
+    type: {
+        type: String,
+        default: 'student'
     },
-    students: [{
-        type: ObjectId,
-        ref: "User"
-    }],
+    grade: {
+        type: Number,
+        default: 0
+    },
     createdAt: {
         type: Date,
         default: Date.now()
@@ -22,7 +24,7 @@ var CourseSchema = new Schema({
     }
 })
 
-CourseSchema.pre('save', function(next) {
+UserSchema.pre('save', function(next) {
     if(this.isNew){
         this.createdAt = this.updatedAt = Date.now()
     } else {
@@ -31,19 +33,18 @@ CourseSchema.pre('save', function(next) {
     next()
 })
 
-CourseSchema.statics.fetch = function (cb) {
+UserSchema.statics.fetch = function (cb) {
   return this
     .find({})
-    .populate('teacher students')
-    .sort({'createdAt': -1})
+    .sort('updatedAt')
     .exec(cb)
 }
 
-CourseSchema.statics.findById = function (id, cb) {
+UserSchema.statics.findById = function (id, cb) {
   return this
     .findOne({_id: id})
     .sort('updatedAt')
     .exec(cb)
 }
 
-module.exports = CourseSchema
+module.exports = UserSchema

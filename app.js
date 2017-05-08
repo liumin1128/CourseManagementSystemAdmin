@@ -6,15 +6,18 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose')
 var Course = require('./modals/Course.js')
+var Users = require('./modals/User.js')
+var StudentCourseSelection = require('./modals/StudentCourseSelection.js')
 
 mongoose.Promise = global.Promise;
 mongoose.connect('mongodb://localhost/CourseManagementSystem')
+mongoose.set('debug', true);
 
 // 增加记录 基于model操作
-var doc = {
-  name : 'model_demo_title',
-  desc : 'model_demo_content'
-};
+// var doc = {
+//   name : '计算机网络原理',
+//   desc : '计算机网络原理基础（一）'
+// };
 // Course.create(doc, function(error){
 //     if(error) {
 //         console.log(error);
@@ -25,11 +28,11 @@ var doc = {
 //     // db.close();
 // });
 
-Course.fetch((err, Courses) => {
-  if (err) { console.log(err) }
-  console.log('Courses')
-  console.log(Courses)
-})
+// Course.fetch((err, Courses) => {
+//   if (err) { console.log(err) }
+//   console.log('Courses')
+//   console.log(Courses)
+// })
 // console.log(Course)
 
 var index = require('./routes/index');
@@ -51,8 +54,160 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
 app.use('/test', function(req, res) {
-  res.send('hello world');
+  res.json({
+    status: 200
+  });
 });
+
+// 获取课程列表
+app.use('/course/list', function(req, res) {
+  Course.fetch((err, courses) => {
+    if (err) { console.log(err) }
+    res.json({
+      status: 200,
+      courses
+    });
+  })
+});
+
+// 添加课程
+app.post('/course/add', function(req, res) {
+  Course.create(req.body, function(err){
+    if(err) {
+        console.log(err);
+        res.json({
+          status: 401,
+          message: '添加课程失败！'
+        })
+    } else {
+        console.log('save ok');
+        res.json({
+          status: 200,
+          message: '添加课程成功！'
+        })
+    }
+  });
+});
+
+// 选课
+app.post('/course/select', function(req, res) {
+
+  var course = req.body.course
+  var student = req.body.student
+  if (!student || !course) {
+    res.json({ status: 401, message: '参数错误！' })
+    return
+  }
+
+  StudentCourseSelection.create(req.body, function(err){
+    if(err) {
+        console.log(err);
+        res.json({
+          status: 401,
+          message: '添加课程失败！'
+        })
+    } else {
+        console.log('save ok');
+        res.json({
+          status: 200,
+          message: '添加课程成功！'
+        })
+    }
+  });
+
+  // Course.findById(courseId, function(err, course) {
+  //   const index = course.students.indexOf(studentId)
+  //   if (index !== -1) { // 如果列表中已存在，则取消选课
+  //     course.students.splice(index, 1)
+  //   } else {     // 如果列表中不存在，则添加选课
+  //     course.students.push(studentId)
+  //   }
+  //   course.save(function(err, course){
+  //     Course.fetch((err, courses) => {
+  //       if (err) { console.log(err) }
+  //       res.json({
+  //         status: 200,
+  //         message: index !== -1 ? '退课成功！' : '选课成功！',
+  //         courses
+  //       });
+  //     })
+  //   })
+  // })
+
+});
+
+// 删除课程
+app.delete('/course/del', function(req, res) {
+  // 删除记录
+  var id = req.body.id
+  if (!id) {
+    res.json({ status: 401, message: '删除失败,id不存在！' })
+    return
+  }
+  Course.findById(id, function(err, data) {
+    Course.remove(data, function(error){
+      if(error) {
+        console.log(error);
+        res.json({ status: 401, message: '删除失败' })
+      } else {
+        console.log('delete ok!');
+        res.json({ status: 200, message: '删除成功' })
+      }
+    });
+  })
+});
+
+// 获取用户列表
+app.use('/users/list', function(req, res) {
+  Users.fetch((err, users) => {
+    if (err) { console.log(err) }
+    res.json({
+      status: 200,
+      users
+    });
+  })
+});
+
+// 添加用户
+app.post('/users/add', function(req, res) {
+  Users.create(req.body, function(err){
+    if(err) {
+        console.log(err);
+        res.json({
+          status: 401,
+          message: '添加课程失败！'
+        })
+    } else {
+        console.log('save ok');
+        res.json({
+          status: 200,
+          message: '添加课程成功！'
+        })
+    }
+  });
+});
+
+// 删除用户
+app.delete('/users/del', function(req, res) {
+  // 删除记录
+  var id = req.body.id
+  if (!id) {
+    res.json({ status: 401, message: '删除失败,id不存在！' })
+    return
+  }
+  Users.findById(id, function(err, data) {
+    Users.remove(data, function(error){
+      if(error) {
+        console.log(error);
+        res.json({ status: 401, message: '删除失败' })
+      } else {
+        console.log('delete ok!');
+        res.json({ status: 200, message: '删除成功' })
+      }
+    });
+  })
+});
+
 app.use('/users', users);
 
 // catch 404 and forward to error handler
