@@ -282,6 +282,21 @@ app.post('/course/evaluate', function(req, res) {
   });
 });
 
+// 评价课程
+app.post('/teacher/getgrade', function(req, res) {
+  console.log(req.body)
+  const teacher = req.body.id
+  Course.find({teacher}).then(data => {
+    data.map(i => {
+      Evaluate.find({ course: i._id }).then(temp => {
+        console.log('查询到评课记录')
+        console.log(temp)
+      })
+    })
+  })
+});
+
+
 app.use('/users', users);
 
 // catch 404 and forward to error handler
