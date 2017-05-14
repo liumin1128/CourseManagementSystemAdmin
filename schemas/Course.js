@@ -4,6 +4,7 @@ var ObjectId = Schema.Types.ObjectId;
 var CourseSchema = new Schema({
     name: String,
     desc: String,
+    select: Boolean,
     teacher: {
         type: ObjectId,
         ref: "User"

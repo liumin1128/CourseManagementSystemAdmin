@@ -1,15 +1,23 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var ObjectId = Schema.Types.ObjectId;
-var SelectionSchema = new Schema({
-    student: {
-        type: ObjectId,
-        ref: "User"
-    },
+var EvaluateSchema = new Schema({
     course: {
         type: ObjectId,
         ref: "Course"
     },
+    teacher: {
+        type: ObjectId,
+        ref: "User"
+    },
+    from: {
+        type: ObjectId,
+        ref: "User"
+    },
+    level: Array,
+    sub: String,
+    studentEvaluate: Array,
+    expertEvaluate: Array,
     createdAt: {
         type: Date,
         default: Date.now()
@@ -20,7 +28,7 @@ var SelectionSchema = new Schema({
     }
 })
 
-SelectionSchema.pre('save', function(next) {
+EvaluateSchema.pre('save', function(next) {
     if(this.isNew){
         this.createdAt = this.updatedAt = Date.now()
     } else {
@@ -29,19 +37,19 @@ SelectionSchema.pre('save', function(next) {
     next()
 })
 
-SelectionSchema.statics.fetch = function (cb) {
+EvaluateSchema.statics.fetch = function (cb) {
   return this
     .find({})
-    .populate('student course')
+    .populate('teacher course from')
     .sort({'createdAt': -1})
     .exec(cb)
 }
 
-SelectionSchema.statics.findById = function (id, cb) {
+EvaluateSchema.statics.findById = function (id, cb) {
   return this
     .findOne({_id: id})
     .sort('updatedAt')
     .exec(cb)
 }
 
-module.exports = SelectionSchema
+module.exports = EvaluateSchema

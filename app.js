@@ -7,7 +7,22 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose')
 var Course = require('./modals/Course.js')
 var Users = require('./modals/User.js')
-var StudentCourseSelection = require('./modals/StudentCourseSelection.js')
+var Selection = require('./modals/StudentCourseSelection.js')
+var Evaluate = require('./modals/Evaluate.js')
+
+
+const deepCopy = (p, c) => {　　
+    var c = c || {};　　　　
+    for (var i in p) {　　　　　　
+        if (typeof p[i] === 'object') {　　　　　　　　
+            c[i] = (p[i].constructor === Array) ? [] : {};　　　　　　　　
+            deepCopy(p[i], c[i]);　　　　　　
+        } else {　　　　　　　　　
+            c[i] = p[i];　　　　　　
+        }　　　　
+    }　　　　
+    return c;　　
+}
 
 mongoose.Promise = global.Promise;
 mongoose.connect('mongodb://localhost/CourseManagementSystem')
@@ -63,10 +78,19 @@ app.use('/test', function(req, res) {
 app.use('/course/list', function(req, res) {
   Course.fetch((err, courses) => {
     if (err) { console.log(err) }
-    res.json({
-      status: 200,
-      courses
-    });
+    Selection.find({'student': '590ed3ef8b411c0f548be2f3'}).then((selections) => {
+      for(let i = 0; i < selections.length; i ++ ) {
+        for(let j = 0; j < courses.length; j ++ ) {
+          if (selections[i].course.toString() === courses[j]._id.toString()) {
+            courses[j].select = true
+          }
+        }
+      }
+      res.json({
+        status: 200,
+        courses
+      });
+    })
   })
 });
 
@@ -99,21 +123,51 @@ app.post('/course/select', function(req, res) {
     return
   }
 
-  StudentCourseSelection.create(req.body, function(err){
-    if(err) {
-        console.log(err);
-        res.json({
-          status: 401,
-          message: '添加课程失败！'
-        })
+  Selection.findOne(req.body).then(selection => {
+    console.log(selection)
+    if (!selection) {
+      Selection.create(req.body, function(err){
+        if(err) {
+            console.log(err);
+            res.json({
+              status: 401,
+              message: '选课失败！'
+            })
+        } else {
+            console.log('save ok');
+            res.json({
+              status: 200,
+              message: '选课成功！'
+            })
+        }
+      });
     } else {
-        console.log('save ok');
-        res.json({
-          status: 200,
-          message: '添加课程成功！'
-        })
+      Selection.remove(selection, function(error){
+        if(error) {
+          console.log(error);
+          res.json({ status: 401, message: '退课失败' })
+        } else {
+          console.log('delete ok!');
+          res.json({ status: 200, message: '退课成功' })
+        }
+      })
     }
-  });
+  })
+  // Selection.create(req.body, function(err){
+  //   if(err) {
+  //       console.log(err);
+  //       res.json({
+  //         status: 401,
+  //         message: '选课失败！'
+  //       })
+  //   } else {
+  //       console.log('save ok');
+  //       res.json({
+  //         status: 200,
+  //         message: '选课成功！'
+  //       })
+  //   }
+  // });
 
   // Course.findById(courseId, function(err, course) {
   //   const index = course.students.indexOf(studentId)
@@ -206,6 +260,26 @@ app.delete('/users/del', function(req, res) {
       }
     });
   })
+});
+
+// 评价课程
+app.post('/course/evaluate', function(req, res) {
+  console.log(req.body)
+  Evaluate.create(req.body, function(err){
+    if(err) {
+        console.log(err);
+        res.json({
+          status: 401,
+          message: '添加评价记录失败！'
+        })
+    } else {
+        console.log('save ok');
+        res.json({
+          status: 200,
+          message: '添加评价记录成功！'
+        })
+    }
+  });
 });
 
 app.use('/users', users);
