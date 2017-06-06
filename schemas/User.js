@@ -6,6 +6,8 @@ var UserSchema = new Schema({
     password: String,
     nickName: String,
     avatarUrl: String,
+    class: String,
+    idNumber: String,
     type: {
         type: String,
         default: 'student'

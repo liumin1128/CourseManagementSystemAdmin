@@ -10,7 +10,7 @@ var EvaluateSchema = new Schema({
         type: ObjectId,
         ref: "User"
     },
-    from: {
+    student: {
         type: ObjectId,
         ref: "User"
     },
