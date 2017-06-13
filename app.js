@@ -10,6 +10,7 @@ import Course from './modals/Course.js'
 import User from './modals/User.js'
 import Selection from './modals/StudentCourseSelection.js'
 import Evaluate from './modals/Evaluate.js'
+import ExportEvaluate from './modals/ExportEvaluate.js'
 import index from './routes/index'
 import users from './routes/users'
 
@@ -74,6 +75,29 @@ app.use('/user/login', async function(req, res) {
   }
 });
 
+app.use('/user/changepw', async function(req, res) {
+  try {
+    const _user = req.body.user
+    const user = await User.findOne({ _id: _user._id })
+    if (!user) {
+      res.json({ success: false, message: '用户名找不到' });
+    } else if (user.password !== req.body.password) {
+      res.json({ success: false, message: '密码错误' });
+    } else {
+      user.password = req.body.newpassword
+      await user.save()
+      res.json({
+          success: true,
+          message: '修改密码成功！'
+      });
+    }
+  } catch (error) {
+    res.json({
+        success: false,
+        message: JSON.stringify(error)
+    });
+  }
+});
 
 // 获取课程列表
 app.post('/course/list', async function(req, res) {
@@ -341,11 +365,46 @@ app.post('/course/evaluate',async function(req, res) {
   }
 });
 
+// 导入督导组评价
+app.post('/course/exportevaluate',async function(req, res) {
+  try {
+    await ExportEvaluate.create(req.body.list)
+    await res.json({
+      success: true,
+      message: '添加督导组评课记录成功！'
+    })
+  } catch (error) {
+    console.log(error)
+    res.json({
+      success: false,
+      message: '添加督导组评课记录失败！'
+    })
+  }
+});
+
 // 管理员查询课程成绩
 app.post('/course/getGradeByAdmin',async function(req, res) {
   const id = req.body.id
   try {
     const data = await Evaluate.find({course: id})
+    console.log('查询成绩')
+    console.log(data)
+    res.json({
+        success: true,
+        message: '查询成功！',
+        data: data
+    });
+  } catch (error) {
+    console.log(error)
+    res.json({ success: false, message: '服务异常' });
+  }
+});
+
+// 管理员查询督导组数据
+app.post('/course/getGradeByAdminExport',async function(req, res) {
+  const id = req.body.id
+  try {
+    const data = await ExportEvaluate.find({course: id})
     console.log('查询成绩')
     console.log(data)
     res.json({
@@ -457,7 +516,6 @@ app.use(function(err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
   // render the error page
   res.status(err.status || 500);
   res.render('error');
