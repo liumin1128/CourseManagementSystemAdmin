@@ -321,7 +321,7 @@ app.post('/users/add', function(req, res) {
 });
 
 // 删除用户
-app.delete('/users/del', function(req, res) {
+app.post('/users/del', function(req, res) {
   // 删除记录
   var id = req.body.id
   if (!id) {
